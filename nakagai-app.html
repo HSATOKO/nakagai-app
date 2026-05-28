@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>仲買管理アプリ - OFFICE NN</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f4;--bg3:#eeece8;
+  --text:#1a1a1a;--text2:#6b6b6b;--text3:#aaa;
+  --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.22);
+  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --green:#0F6E56;--green-bg:#E1F5EE;--green-text:#085041;
+  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --purple:#534AB7;--purple-bg:#EEEDFE;--purple-text:#3C3489;
+  --red:#A32D2D;--red-bg:#FCEBEB;--red-text:#791F1F;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;background:#e8e8e8;min-height:100vh;display:flex;justify-content:center;align-items:flex-start}
+.app{width:100%;max-width:420px;min-height:100vh;background:var(--bg);display:flex;flex-direction:column;position:relative}
+@media(min-width:430px){.app{min-height:100vh;box-shadow:0 0 20px rgba(0,0,0,0.1)}}
+
+/* screens */
+.screen{display:none;flex-direction:column;flex:1;min-height:100vh}
+.screen.on{display:flex}
+
+/* nav */
+.nav{background:var(--bg);border-bottom:0.5px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:8px;min-height:50px;position:sticky;top:0;z-index:10}
+.nav-title{font-size:15px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-back{background:none;border:none;cursor:pointer;color:var(--blue);font-size:13px;padding:4px 2px;display:flex;align-items:center;gap:2px;white-space:nowrap;font-family:inherit}
+.nav-btn{background:none;border:0.5px solid var(--border2);border-radius:var(--radius);cursor:pointer;color:var(--blue);font-size:12px;padding:5px 10px;font-family:inherit}
+
+/* scroll content */
+.scroll{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px}
+.bbar{border-top:0.5px solid var(--border);padding:10px 12px;background:var(--bg);display:flex;flex-direction:column;gap:8px;position:sticky;bottom:0}
+
+/* buttons */
+.btn{width:100%;padding:13px;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{opacity:.8;transform:scale(.98)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-green{background:var(--green);color:#fff}
+.btn-amber{background:var(--amber);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-outline{background:var(--bg);color:var(--text);border:0.5px solid var(--border2)}
+.btn-outline:active{background:var(--bg2)}
+.btn:disabled{background:var(--bg2);color:var(--text3);cursor:default}
+
+/* cards */
+.card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:14px;margin-bottom:10px}
+.card.active-card{border-color:var(--blue);border-width:1.5px}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.metric{background:var(--bg2);border-radius:var(--radius);padding:10px 12px}
+.metric-label{font-size:11px;color:var(--text2);margin-bottom:3px}
+.metric-val{font-size:18px;font-weight:600}
+
+/* section label */
+.sec{font-size:11px;font-weight:600;color:var(--text3);letter-spacing:.05em;margin-bottom:7px;margin-top:14px}
+.sec:first-of-type{margin-top:0}
+
+/* stage cards */
+.stage-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:13px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;background:var(--bg)}
+.stage-card:active{background:var(--bg2);transform:scale(.98)}
+.stage-card.s-current{border-color:var(--blue);border-width:1.5px}
+.stage-card.s-done{background:var(--bg2)}
+.snum{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;flex-shrink:0}
+.sn-idle{background:var(--bg2);color:var(--text3);border:0.5px solid var(--border2)}
+.sn-cur{background:var(--blue);color:#fff}
+.sn-done{background:var(--green-bg);color:var(--green);border:0.5px solid #97C459}
+.stage-body{flex:1;min-width:0}
+.stage-title{font-size:14px;font-weight:600;margin-bottom:2px}
+.stage-sub{font-size:11px;color:var(--text2)}
+.connector{display:flex;justify-content:center;height:12px;margin:-3px 0}
+.connector-line{width:1px;height:12px;background:var(--border2)}
+
+/* fish buttons */
+.fish-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:12px}
+.fish-btn{padding:11px 4px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:13px;cursor:pointer;background:var(--bg);color:var(--text);text-align:center;line-height:1.3;font-family:inherit}
+.fish-btn:active{transform:scale(.94);background:var(--bg2)}
+.fish-btn.sel{background:var(--blue-bg);border-color:var(--blue);color:var(--blue-text);font-weight:600}
+.yomi{font-size:9px;color:var(--text3);display:block;margin-top:1px}
+.fish-btn.sel .yomi{color:var(--blue)}
+
+/* cat chips */
+.cat-scroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:8px;scrollbar-width:none}
+.cat-scroll::-webkit-scrollbar{display:none}
+.cat-chip{flex-shrink:0;padding:5px 12px;border:0.5px solid var(--border2);border-radius:20px;font-size:12px;cursor:pointer;background:var(--bg);color:var(--text2);white-space:nowrap;font-family:inherit}
+.cat-chip.on{background:var(--blue-bg);color:var(--blue-text);border-color:#85B7EB}
+
+/* numpad */
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.np{padding:16px;border:0.5px solid var(--border);border-radius:var(--radius);font-size:20px;cursor:pointer;background:var(--bg);color:var(--text);text-align:center;font-family:inherit;border:none;outline:0.5px solid var(--border)}
+.np:active{background:var(--bg2);transform:scale(.93)}
+.np.wide{grid-column:span 2}
+.np.confirm{background:var(--blue);color:#fff;outline-color:var(--blue)}
+.np.confirm:active{opacity:.8}
+
+/* field tabs */
+.field-tabs{display:flex;gap:6px;margin-bottom:10px}
+.ftab{flex:1;padding:8px;border-radius:var(--radius);font-size:12px;cursor:pointer;text-align:center;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);font-family:inherit}
+.ftab.on{background:var(--blue-bg);color:var(--blue-text);border-color:var(--blue);font-weight:600}
+
+/* unit chips */
+.unit-row{display:flex;gap:6px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
+.uchip{padding:5px 14px;border:0.5px solid var(--border2);border-radius:20px;font-size:13px;cursor:pointer;background:var(--bg);color:var(--text2);font-family:inherit}
+.uchip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* display val */
+.disp-area{background:var(--bg);border:0.5px solid var(--border2);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.disp-val{font-size:26px;font-weight:600;color:var(--blue)}
+.disp-val.hint{font-size:15px;color:var(--text3);font-weight:400}
+
+/* purchase list */
+.pur-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:0.5px solid var(--border)}
+.pur-row:last-child{border-bottom:none}
+.pur-name{flex:1;font-size:14px;font-weight:600}
+.pur-qty{font-size:12px;color:var(--text2);min-width:52px;text-align:right}
+.pur-price{font-size:14px;font-weight:600;color:var(--blue);min-width:72px;text-align:right}
+.pur-del{background:none;border:none;cursor:pointer;color:var(--text3);padding:4px;font-size:16px}
+
+/* summary bar */
+.sum-bar{background:var(--bg2);border-radius:var(--radius);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+/* sort items */
+.sort-item{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:8px;background:var(--bg)}
+.sort-item.land{border-color:#85B7EB;background:var(--blue-bg)}
+.sort-item.store{border-color:#9FE1CB;background:var(--green-bg)}
+.sort-btns{display:flex;gap:6px}
+.sbtn{flex:1;padding:9px 4px;border-radius:var(--radius);font-size:12px;cursor:pointer;text-align:center;font-weight:600;border:0.5px solid var(--border2);background:var(--bg);color:var(--text2);font-family:inherit}
+.sbtn:active{transform:scale(.95)}
+.sbtn.land-on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sbtn.store-on{background:var(--green);color:#fff;border-color:var(--green)}
+.sbtn.both-on{background:var(--purple);color:#fff;border-color:var(--purple)}
+.split-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.split-input{padding:7px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);width:100%;text-align:right;font-family:inherit}
+
+/* price cards */
+.price-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:8px}
+.pc-head{background:var(--blue-bg);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:0.5px solid var(--border)}
+.pc-body{padding:10px 14px}
+.pc-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pc-label{font-size:12px;color:var(--text2);width:72px;flex-shrink:0}
+.progress-bar{height:3px;background:var(--bg2);border-radius:2px;margin-bottom:12px;overflow:hidden}
+.progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .3s}
+
+/* doc paper */
+.doc-paper{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;position:relative;margin-bottom:12px}
+.stamp{position:absolute;top:12px;right:14px;width:50px;height:50px;border:2px solid #E24B4A;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#E24B4A;font-size:12px;font-weight:600;letter-spacing:.05em;opacity:.85;transform:rotate(-8deg);z-index:1}
+.doc-top{padding:14px 14px 10px;border-bottom:0.5px solid var(--border)}
+.doc-type{font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;margin-bottom:2px}
+.doc-title-blue{font-size:20px;font-weight:600;letter-spacing:.08em;color:var(--blue)}
+.doc-title-green{font-size:20px;font-weight:600;letter-spacing:.08em;color:var(--green)}
+.doc-title-amber{font-size:20px;font-weight:600;letter-spacing:.08em;color:var(--amber)}
+.doc-to{padding:10px 14px;border-bottom:0.5px solid var(--border);background:var(--bg2)}
+.doc-from{padding:8px 14px;border-bottom:0.5px solid var(--border);text-align:right}
+doc-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.doc-table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+.doc-table th{background:var(--bg2);padding:6px 8px;text-align:right;color:var(--text3);font-weight:600;border-bottom:0.5px solid var(--border)}
+.doc-table th:first-child{text-align:left}
+.doc-table td{padding:7px 8px;border-bottom:0.5px solid var(--border);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-table td:first-child{text-align:left}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-totals{padding:8px 14px}
+.tot-row{display:flex;justify-content:space-between;padding:3px 0;font-size:13px}
+.tot-grand{border-top:0.5px solid var(--border);margin-top:5px;padding-top:7px;font-size:15px;font-weight:600}
+.doc-note{padding:8px 14px;font-size:11px;color:var(--text2);border-top:0.5px solid var(--border);line-height:1.6}
+
+/* receipt */
+.rcpt-amount{margin:12px 14px 8px;padding:12px;background:var(--amber-bg);border-radius:var(--radius);text-align:center}
+.rcpt-amount-label{font-size:11px;color:var(--amber);margin-bottom:3px}
+.rcpt-amount-val{font-size:28px;font-weight:600;color:var(--amber-text)}
+
+/* pay chips */
+.pay-chips{display:flex;gap:7px;flex-wrap:wrap}
+.pchip{padding:8px 14px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;cursor:pointer;background:var(--bg);color:var(--text2);font-family:inherit;display:flex;align-items:center;gap:5px}
+.pchip.on{background:var(--amber-bg);color:var(--amber-text);border-color:#EF9F27;font-weight:600}
+
+/* payment */
+.pay-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:6px;background:var(--bg)}
+.pay-row.paid{background:var(--green-bg);border-color:#9FE1CB}
+.pay-check{width:28px;height:28px;border-radius:50%;border:0.5px solid var(--border2);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.pay-check.on{background:var(--green);border-color:var(--green);color:#fff}
+
+/* clients */
+.client-card{border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:8px;cursor:pointer}
+.client-card:active{background:var(--bg2)}
+.status-chip{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.sc-pending{background:var(--amber-bg);color:var(--amber-text)}
+.sc-issued{background:var(--blue-bg);color:var(--blue-text)}
+.sc-paid{background:var(--green-bg);color:var(--green-text)}
+
+/* chart */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.bar-track{flex:1;height:18px;background:var(--bg2);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+
+/* rank */
+.rank-item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--border)}
+.rank-item:last-child{border-bottom:none}
+
+/* step flow */
+.step-flow{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:14px}
+.sfnode{display:flex;flex-direction:column;align-items:center;gap:3px}
+.sfcircle{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600}
+.sfc-idle{background:var(--bg2);color:var(--text3);border:0.5px solid var(--border2)}
+.sfc-active{background:var(--amber);color:#fff}
+.sfc-done{background:var(--green-bg);color:var(--green);border:0.5px solid #97C459}
+.sflabel{font-size:10px;color:var(--text3);white-space:nowrap}
+.sfarrow{color:var(--border2);font-size:13px;margin-bottom:14px}
+
+/* misc */
+.info-box{background:var(--amber-bg);border-radius:var(--radius);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--amber-text);line-height:1.5}
+.empty{text-align:center;padding:32px 20px;color:var(--text3);font-size:13px;line-height:1.8}
+.margin-chip{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:600}
+.mg-pos{background:var(--green-bg);color:var(--green-text)}
+.mg-neg{background:var(--red-bg);color:var(--red-text)}
+.tab-bar{display:flex;border-bottom:0.5px solid var(--border)}
+.tab{flex:1;padding:9px 4px;font-size:12px;cursor:pointer;text-align:center;background:none;border:none;color:var(--text2);border-bottom:2px solid transparent;font-family:inherit}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue);font-weight:600}
+.search-input{width:100%;padding:8px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);font-family:inherit;margin-bottom:10px}
+.toggle{width:40px;height:22px;border-radius:11px;cursor:pointer;border:none;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--blue)}
+.toggle.off{background:var(--border2)}
+.toggle::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on::after{left:21px}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:999}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="toast" id="toast"></div>
+
+<!-- ===== SPLASH ===== -->
+<div class="screen on" id="s-splash" style="justify-content:center;align-items:center;min-height:100vh;background:var(--bg)">
+  <div style="text-align:center;padding:40px 20px">
+    <div style="width:72px;height:72px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:36px">🐟</div>
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px">手書きからアプリへ</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:40px">せりから入金まで一気通貫</div>
+    <div style="width:48px;height:3px;background:var(--bg2);border-radius:2px;margin:0 auto 40px;overflow:hidden">
+      <div id="splash-bar" style="width:0%;height:100%;background:var(--blue);border-radius:2px;transition:width .05s linear"></div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Produced by</div>
+    <div style="font-size:15px;font-weight:700;color:var(--blue)">OFFICE NN</div>
+    <div style="font-size:11px;color:var(--text3);margin-top:2px">小樽市 ／ 日野間 佐登子</div>
+  </div>
+</div>
+
+    <div style="padding:20px 0 8px;text-align:center">
+      <div style="font-size:10px;color:var(--text3);margin-bottom:2px">Powered by</div>
+      <div style="font-size:13px;font-weight:700;color:var(--blue)">OFFICE NN</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:1px">v1.0.0</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<div class="screen" id="s-dash">
+  <div class="nav">
+    <span class="nav-title">🐟 手書きからアプリへ</span>
+    <button class="nav-btn" onclick="go('s-settings')">設定</button>
+  </div>
+  <div class="scroll">
+    <div style="background:var(--blue-bg);border-radius:var(--radius-lg);padding:14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+      <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px">🏢</div>
+      <div>
+        <div style="font-size:15px;font-weight:600;color:var(--blue-text)">山口魚類容器株式会社</div>
+        <div style="font-size:11px;color:var(--blue)">仲買業務管理システム v1.0</div>
+      </div>
+    </div>
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:var(--text2)">本日</div>
+        <div style="font-size:14px;font-weight:600" id="db-date"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">業務進捗</div>
+        <div style="display:flex;gap:5px" id="db-dots"></div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">本日 仕入れ</div><div class="metric-val" style="color:var(--blue)" id="db-pur">¥0</div></div>
+      <div class="metric"><div class="metric-label">本日 販売</div><div class="metric-val" style="color:var(--green)" id="db-sell">¥0</div></div>
+      <div class="metric"><div class="metric-label">未入金</div><div class="metric-val" style="color:var(--amber)" id="db-unpaid">¥0</div></div>
+      <div class="metric"><div class="metric-label">今月 粗利率</div><div class="metric-val" style="color:var(--purple)">32.4%</div></div>
+    </div>
+    <div class="sec">業務フロー</div>
+    <div class="stage-card s-current" id="sc-1" onclick="go('s-s1')">
+      <div class="snum sn-cur" id="sn-1">1</div>
+      <div class="stage-body"><div class="stage-title">① 仕入れ入力</div><div class="stage-sub">せりで落とした魚種をタップ入力</div></div>
+      <span style="color:var(--text3);font-size:16px">›</span>
+    </div>
+    <div class="connector"><div class="connector-line"></div></div>
+    <div class="stage-card" id="sc-2" onclick="go('s-s2')">
+      <div class="snum sn-idle" id="sn-2">2</div>
+      <div class="stage-body"><div class="stage-title">② 仕分け・値付け</div><div class="stage-sub">陸送／倉庫の振り分けと社長値付け</div></div>
+      <span style="color:var(--text3);font-size:16px">›</span>
+    </div>
+    <div class="connector"><div class="connector-line"></div></div>
+    <div class="stage-card" id="sc-3" onclick="go('s-s3-clients')">
+      <div class="snum sn-idle" id="sn-3">3</div>
+      <div class="stage-body"><div class="stage-title">③ 書類発行・入金</div><div class="stage-sub">納品書・請求書・領収証・入金確認</div></div>
+      <span style="color:var(--text3);font-size:16px">›</span>
+    </div>
+    <div class="connector"><div class="connector-line"></div></div>
+    <div class="stage-card" id="sc-4" onclick="go('s-s4')">
+      <div class="snum sn-idle" id="sn-4">4</div>
+      <div class="stage-body"><div class="stage-title">④ 管理・分析</div><div class="stage-sub">月次集計・取引先・履歴・マスタ</div></div>
+      <span style="color:var(--text3);font-size:16px">›</span>
+    </div>
+    <div class="sec">クイックアクセス</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s1')">
+        <div style="font-size:22px;margin-bottom:6px;color:var(--blue)">＋</div>
+        <div style="font-size:13px;font-weight:600">仕入れを追加</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">魚種を選んで入力</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s3-clients')">
+        <div style="font-size:22px;margin-bottom:6px;color:var(--green)">📄</div>
+        <div style="font-size:13px;font-weight:600">書類を発行</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">納品書・請求書</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s3-payment')">
+        <div style="font-size:22px;margin-bottom:6px;color:var(--amber)">💴</div>
+        <div style="font-size:13px;font-weight:600">入金チェック</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">未入金を確認</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s4')">
+        <div style="font-size:22px;margin-bottom:6px;color:var(--purple)">📊</div>
+        <div style="font-size:13px;font-weight:600">月次レポート</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">集計・分析</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STAGE 1: 仕入れ入力 ===== -->
+<div class="screen" id="s-s1">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-dash')">‹ ダッシュボード</button>
+    <span class="nav-title">① 仕入れ入力</span>
+    <button class="nav-btn" onclick="go('s-s1-list')">一覧</button>
+  </div>
+  <div class="scroll">
+    <div style="background:var(--bg2);border-radius:var(--radius);padding:8px 12px;display:flex;justify-content:space-between;margin-bottom:12px">
+      <span style="font-size:13px;font-weight:600" id="s1-date"></span>
+      <span style="font-size:13px;color:var(--blue);font-weight:600" id="s1-count">0件登録済</span>
+    </div>
+    <div class="sec">よく使う魚種（12種）</div>
+    <div class="fish-grid" id="quick-grid"></div>
+    <div class="sec">カテゴリから選ぶ</div>
+    <div class="cat-scroll" id="cat-scroll"></div>
+    <div class="fish-grid" id="all-grid"></div>
+  </div>
+</div>
+
+<!-- 仕入れ入力パネル -->
+<div class="screen" id="s-s1-input">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s1')">‹ 魚種選択</button>
+    <span class="nav-title" id="s1-input-title">入力</span>
+  </div>
+  <div class="scroll">
+    <div style="background:var(--bg2);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px">
+      <div style="font-size:16px;font-weight:600;margin-bottom:10px" id="s1-fish-name"></div>
+      <div class="field-tabs">
+        <button class="ftab on" id="ft-qty" onclick="setField('qty')">数量</button>
+        <button class="ftab" id="ft-price" onclick="setField('price')">金額</button>
+      </div>
+      <div class="disp-area">
+        <span style="font-size:12px;color:var(--text2)" id="ft-label">数量</span>
+        <span class="disp-val hint" id="s1-disp">入力してください</span>
+      </div>
+      <div class="unit-row" id="unit-row"></div>
+      <div style="text-align:right;min-height:20px;margin-bottom:6px" id="margin-row"></div>
+    </div>
+    <div class="numpad">
+      <button class="np" onclick="np('7')">7</button><button class="np" onclick="np('8')">8</button><button class="np" onclick="np('9')">9</button>
+      <button class="np" onclick="np('4')">4</button><button class="np" onclick="np('5')">5</button><button class="np" onclick="np('6')">6</button>
+      <button class="np" onclick="np('1')">1</button><button class="np" onclick="np('2')">2</button><button class="np" onclick="np('3')">3</button>
+      <button class="np wide" onclick="np('0')">0</button><button class="np" onclick="npDel()">⌫</button>
+    </div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-blue" id="s1-add-btn" onclick="addItem()" disabled>リストに追加</button>
+  </div>
+</div>
+
+<!-- 仕入れ一覧 -->
+<div class="screen" id="s-s1-list">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s1')">‹ 入力に戻る</button>
+    <span class="nav-title">本日の仕入れ</span>
+    <button class="nav-btn" onclick="downloadCSV()">CSV</button>
+  </div>
+  <div class="scroll">
+    <div class="sum-bar">
+      <div><div style="font-size:11px;color:var(--text2)">合計仕入れ金額</div><div style="font-size:11px;color:var(--text3)" id="s1-sum-sub"></div></div>
+      <div style="font-size:20px;font-weight:600" id="s1-sum-price">¥0</div>
+    </div>
+    <div id="s1-item-list"></div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-green" onclick="finishStage1()">仕入れ確定 → 仕分けへ進む</button>
+  </div>
+</div>
+
+<!-- ===== STAGE 2: 仕分け ===== -->
+<div class="screen" id="s-s2">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-dash')">‹ ダッシュボード</button>
+    <span class="nav-title">② 仕分け</span>
+    <button class="nav-btn" onclick="go('s-s2-price')">値付けへ</button>
+  </div>
+  <div class="scroll">
+    <div class="info-box">各魚種を「陸送」か「倉庫」に振り分けてください。数量を分けることもできます。</div>
+    <div id="sort-list"></div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-amber" onclick="go('s-s2-price')">値付け画面へ進む →</button>
+  </div>
+</div>
+
+<!-- 値付け -->
+<div class="screen" id="s-s2-price">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s2')">‹ 仕分け</button>
+    <span class="nav-title">② 社長値付け（陸送分）</span>
+  </div>
+  <div class="scroll">
+    <div class="progress-bar"><div class="progress-fill" id="price-progress" style="width:0%"></div></div>
+    <div style="background:var(--bg2);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px" id="price-fish-name">魚種を選んでください</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:10px" id="price-cost-info"></div>
+      <div class="disp-area">
+        <span style="font-size:12px;color:var(--text2)">販売金額</span>
+        <span class="disp-val hint" id="price-disp">タップして入力</span>
+      </div>
+      <div style="text-align:right;min-height:20px;margin-bottom:6px" id="price-margin"></div>
+      <div class="numpad">
+        <button class="np" onclick="pnp('7')">7</button><button class="np" onclick="pnp('8')">8</button><button class="np" onclick="pnp('9')">9</button>
+        <button class="np" onclick="pnp('4')">4</button><button class="np" onclick="pnp('5')">5</button><button class="np" onclick="pnp('6')">6</button>
+        <button class="np" onclick="pnp('1')">1</button><button class="np" onclick="pnp('2')">2</button><button class="np" onclick="pnp('3')">3</button>
+        <button class="np wide" onclick="pnp('0')">0</button><button class="np" onclick="pnpDel()">⌫</button>
+      </div>
+      <button class="btn btn-blue" onclick="confirmPrice()">この金額で確定</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:6px">陸送リスト — タップして選択</div>
+    <div id="price-list"></div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-green" onclick="go('s-s2-sheet')">引き渡し書を作成 →</button>
+  </div>
+</div>
+
+<!-- 引き渡し書 -->
+<div class="screen" id="s-s2-sheet">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s2-price')">‹ 値付け</button>
+    <span class="nav-title">事務方 引き渡し書</span>
+  </div>
+  <div class="scroll">
+    <div class="metrics" id="sheet-metrics"></div>
+    <div class="sec">陸送分 明細</div>
+    <div id="sheet-land"></div>
+    <div class="sec" id="sheet-store-label">倉庫分 明細</div>
+    <div id="sheet-store"></div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-amber" onclick="toast2('印刷ダイアログを開きます')">🖨 印刷 / PDF保存</button>
+    <button class="btn btn-green" onclick="finishStage2()">書類発行・入金へ進む →</button>
+  </div>
+</div>
+
+<!-- ===== STAGE 3: 書類発行 ===== -->
+<div class="screen" id="s-s3-clients">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-dash')">‹ ダッシュボード</button>
+    <span class="nav-title">③ 取引先一覧</span>
+    <button class="nav-btn" onclick="go('s-s3-payment')">入金</button>
+  </div>
+  <div class="scroll">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">本日 請求</div><div class="metric-val" style="color:var(--blue)" id="c-total">¥0</div></div>
+      <div class="metric"><div class="metric-label">入金済</div><div class="metric-val" style="color:var(--green)" id="c-paid">¥0</div></div>
+      <div class="metric"><div class="metric-label">未入金</div><div class="metric-val" style="color:var(--amber)" id="c-unpaid">¥0</div></div>
+      <div class="metric"><div class="metric-label">取引先数</div><div class="metric-val" id="c-count">0社</div></div>
+    </div>
+    <div class="sec">取引先 — タップして書類発行</div>
+    <div id="clients-list"></div>
+  </div>
+</div>
+
+<!-- 書類発行（納品書） -->
+<div class="screen" id="s-s3-delivery">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s3-clients')">‹ 一覧</button>
+    <span class="nav-title" id="doc-screen-title">書類発行</span>
+  </div>
+  <div class="scroll">
+    <div class="step-flow">
+      <div class="sfnode"><div class="sfcircle sfc-active" id="sf1">1</div><span class="sflabel">納品書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle" id="sf2">2</div><span class="sflabel">請求書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle" id="sf3">3</div><span class="sflabel">領収証</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle" id="sf4">✓</div><span class="sflabel">完了</span></div>
+    </div>
+    <div class="doc-paper">
+      <div class="doc-top">
+        <div class="doc-type">DELIVERY NOTE</div>
+        <div class="doc-title-blue">納　品　書</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:6px">発行日：<b id="d-date"></b>　文書番号：<b>DN-001</b></div>
+      </div>
+      <div class="doc-to"><div style="font-size:15px;font-weight:600" id="d-to"></div><div style="font-size:12px;color:var(--text2)" id="d-contact"></div></div>
+      <div class="doc-from"><div style="font-size:13px;font-weight:600">OFFICE NN</div><div style="font-size:11px;color:var(--text2)">小樽市 ／ 日野間 佐登子</div></div>
+      <table class="doc-table"><colgroup><col style="width:38%"><col style="width:18%"><col style="width:22%"><col style="width:22%"></colgroup>
+        <thead><tr><th style="text-align:left">品目</th><th>数量</th><th>単価</th><th>金額</th></tr></thead>
+        <tbody id="d-items"></tbody>
+      </table>
+      <div class="doc-totals" id="d-totals"></div>
+      <div class="doc-note">上記の通り納品いたします。ご確認よろしくお願いいたします。</div>
+    </div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-outline" onclick="toast2('PDFを作成して保存します')">🖨 印刷 / PDF保存</button>
+    <button class="btn btn-green" onclick="goInvoice()">請求書発行へ →</button>
+  </div>
+</div>
+
+<!-- 請求書 -->
+<div class="screen" id="s-s3-invoice">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s3-delivery')">‹ 納品書</button>
+    <span class="nav-title" id="inv-screen-title">請求書</span>
+  </div>
+  <div class="scroll">
+    <div class="step-flow">
+      <div class="sfnode"><div class="sfcircle sfc-done">✓</div><span class="sflabel">納品書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-active">2</div><span class="sflabel">請求書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle">3</div><span class="sflabel">領収証</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle">✓</div><span class="sflabel">完了</span></div>
+    </div>
+    <div class="doc-paper">
+      <div class="doc-top">
+        <div class="doc-type">INVOICE</div>
+        <div class="doc-title-green">請　求　書</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:6px">発行日：<b id="i-date"></b>　文書番号：<b>IN-001</b><br>支払期日：<b id="i-due"></b></div>
+      </div>
+      <div class="doc-to"><div style="font-size:15px;font-weight:600" id="i-to"></div><div style="font-size:12px;color:var(--text2)" id="i-contact"></div></div>
+      <div class="doc-from"><div style="font-size:13px;font-weight:600">OFFICE NN</div><div style="font-size:11px;color:var(--text2)">小樽市 ／ 日野間 佐登子<br>振込先：○○銀行 旭川支店 普通 XXXXXXX</div></div>
+      <table class="doc-table"><colgroup><col style="width:38%"><col style="width:18%"><col style="width:22%"><col style="width:22%"></colgroup>
+        <thead><tr><th style="text-align:left">品目</th><th>数量</th><th>単価</th><th>金額</th></tr></thead>
+        <tbody id="i-items"></tbody>
+      </table>
+      <div class="doc-totals" id="i-totals"></div>
+      <div class="doc-note">上記の通りご請求申し上げます。振込手数料はご負担ください。</div>
+    </div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-outline" onclick="toast2('PDFを作成して保存します')">🖨 印刷 / PDF保存</button>
+    <button class="btn btn-amber" onclick="goReceipt()">領収証発行へ →</button>
+  </div>
+</div>
+
+<!-- 領収証 -->
+<div class="screen" id="s-s3-receipt">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s3-invoice')">‹ 請求書</button>
+    <span class="nav-title">領収証</span>
+  </div>
+  <div class="scroll">
+    <div class="step-flow">
+      <div class="sfnode"><div class="sfcircle sfc-done">✓</div><span class="sflabel">納品書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-done">✓</div><span class="sflabel">請求書</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-active">3</div><span class="sflabel">領収証</span></div>
+      <span class="sfarrow">›</span>
+      <div class="sfnode"><div class="sfcircle sfc-idle">✓</div><span class="sflabel">完了</span></div>
+    </div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px">支払方法</div>
+      <div class="pay-chips">
+        <button class="pchip on" id="pc-cash" onclick="setPayMethod('cash')">💴 現金</button>
+        <button class="pchip" id="pc-transfer" onclick="setPayMethod('transfer')">🏦 銀行振込</button>
+        <button class="pchip" id="pc-card" onclick="setPayMethod('card')">💳 カード</button>
+      </div>
+    </div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:var(--text3);margin-bottom:8px">但し書き</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <input type="text" id="tadashi" value="鮮魚販売代金として" oninput="updateReceipt()" style="flex:1;padding:8px 10px;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:13px;font-family:inherit">
+        <button onclick="document.getElementById('tadashi').value='鮮魚販売代金として';updateReceipt()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text3);white-space:nowrap;font-family:inherit">リセット</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button onclick="setTadashi('鮮魚販売代金として')" style="padding:4px 10px;border:0.5px solid var(--border2);border-radius:4px;font-size:11px;cursor:pointer;background:var(--bg2);color:var(--text2);font-family:inherit">鮮魚販売代金として</button>
+        <button onclick="setTadashi('魚介類販売代金として')" style="padding:4px 10px;border:0.5px solid var(--border2);border-radius:4px;font-size:11px;cursor:pointer;background:var(--bg2);color:var(--text2);font-family:inherit">魚介類販売代金として</button>
+        <button onclick="setTadashi('品代として')" style="padding:4px 10px;border:0.5px solid var(--border2);border-radius:4px;font-size:11px;cursor:pointer;background:var(--bg2);color:var(--text2);font-family:inherit">品代として</button>
+      </div>
+    </div>
+    <div class="doc-paper">
+      <div class="stamp">領収済</div>
+      <div class="doc-top">
+        <div class="doc-type">RECEIPT</div>
+        <div class="doc-title-amber">領　収　証</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:6px">発行日：<b id="r-date"></b>　文書番号：<b>RC-001</b></div>
+      </div>
+      <div class="doc-to"><div style="font-size:15px;font-weight:600" id="r-to"></div></div>
+      <div class="rcpt-amount">
+        <div class="rcpt-amount-label">領収金額（税込）</div>
+        <div class="rcpt-amount-val" id="r-amount">¥ 0</div>
+      </div>
+      <div style="padding:4px 14px;display:flex;justify-content:space-between;font-size:12px;color:var(--text2)"><span>内　消費税（10%）</span><span id="r-tax">¥0</span></div>
+      <div style="padding:10px 14px;border-top:0.5px solid var(--border)">
+        <div style="font-size:13px" id="r-tadashi">但し、鮮魚販売代金として</div>
+        <div style="margin-top:6px" id="r-pay-badge"></div>
+      </div>
+      <div style="padding:8px 14px;border-top:0.5px solid var(--border);text-align:right">
+        <div style="font-size:13px;font-weight:600">OFFICE NN</div>
+        <div style="font-size:11px;color:var(--text2)">小樽市 ／ 日野間 佐登子　㊞</div>
+      </div>
+    </div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-outline" onclick="toast2('PDFを作成して保存します')">🖨 印刷 / PDF保存</button>
+    <button class="btn btn-purple" onclick="issueComplete()">完了</button>
+  </div>
+</div>
+
+<!-- 入金チェック -->
+<div class="screen" id="s-s3-payment">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s3-clients')">‹ 取引先</button>
+    <span class="nav-title">入金チェック</span>
+  </div>
+  <div class="scroll">
+    <div class="metrics" id="pay-metrics"></div>
+    <div class="sec">入金状況 — タップで確認</div>
+    <div id="payment-list"></div>
+  </div>
+</div>
+
+<!-- ===== STAGE 4: 管理・分析 ===== -->
+<div class="screen" id="s-s4">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-dash')">‹ ダッシュボード</button>
+    <span class="nav-title">④ 管理・分析</span>
+  </div>
+  <div class="scroll">
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">今月 仕入れ</div><div class="metric-val" style="color:var(--blue)">¥218万</div></div>
+      <div class="metric"><div class="metric-label">今月 販売</div><div class="metric-val" style="color:var(--green)">¥289万</div></div>
+      <div class="metric"><div class="metric-label">今月 粗利</div><div class="metric-val" style="color:var(--purple)">¥71万</div></div>
+      <div class="metric"><div class="metric-label">粗利率</div><div class="metric-val" style="color:var(--amber)">32.4%</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s4-monthly')">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--blue)">📊</div>
+        <div style="font-size:13px;font-weight:600">月次集計</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">仕入れ・販売・粗利推移</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s4-clients')">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--green)">🏪</div>
+        <div style="font-size:13px;font-weight:600">取引先マスタ</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">登録・編集・実績</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s4-history')">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--amber)">📋</div>
+        <div style="font-size:13px;font-weight:600">仕入れ履歴</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">過去の記録を検索</div>
+      </div>
+      <div class="card" style="cursor:pointer;padding:13px" onclick="go('s-s4-fishmaster')">
+        <div style="font-size:20px;margin-bottom:6px;color:var(--purple)">🐟</div>
+        <div style="font-size:13px;font-weight:600">魚種マスタ</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">クイック12種の設定</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 月次集計 -->
+<div class="screen" id="s-s4-monthly">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s4')">‹ 管理</button>
+    <span class="nav-title">月次集計</span>
+    <button class="nav-btn" onclick="toast2('CSVをダウンロード')">CSV</button>
+  </div>
+  <div class="scroll">
+    <div class="tab-bar">
+      <button class="tab on" id="mt1" onclick="switchMTab('bar')">棒グラフ</button>
+      <button class="tab" id="mt2" onclick="switchMTab('rank')">魚種ランキング</button>
+    </div>
+    <div style="height:12px"></div>
+    <div id="m-bar-view">
+      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:8px">月別 仕入れ・販売（万円）</div>
+      <div style="display:flex;gap:12px;margin-bottom:8px">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:#B5D4F4"></div>仕入れ</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue)"></div>販売</div>
+      </div>
+      <div id="bar-chart"></div>
+    </div>
+    <div id="m-rank-view" style="display:none">
+      <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px">
+        <div id="rank-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 取引先マスタ -->
+<div class="screen" id="s-s4-clients">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s4')">‹ 管理</button>
+    <span class="nav-title">取引先マスタ</span>
+    <button class="nav-btn" onclick="toast2('新規追加（実装予定）')">＋追加</button>
+  </div>
+  <div class="scroll">
+    <input type="search" class="search-input" placeholder="取引先を検索..." oninput="filterM4Clients(this.value)">
+    <div id="m4-clients-list"></div>
+  </div>
+</div>
+
+<!-- 仕入れ履歴 -->
+<div class="screen" id="s-s4-history">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s4')">‹ 管理</button>
+    <span class="nav-title">仕入れ履歴</span>
+    <button class="nav-btn" onclick="toast2('CSVをダウンロード')">CSV</button>
+  </div>
+  <div class="scroll">
+    <input type="search" class="search-input" placeholder="魚種・日付で検索..." oninput="filterHistory(this.value)">
+    <div id="history-list"></div>
+  </div>
+</div>
+
+<!-- 魚種マスタ -->
+<div class="screen" id="s-s4-fishmaster">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-s4')">‹ 管理</button>
+    <span class="nav-title">魚種マスタ</span>
+  </div>
+  <div class="scroll">
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">クイック表示中：<b id="quick-count" style="color:var(--green)">12/12種</b>　オンにした順で上から表示されます。</div>
+    <div id="fishmaster-list"></div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-blue" onclick="toast2('魚種マスタを保存しました')">💾 保存する</button>
+  </div>
+</div>
+
+<!-- 設定 -->
+<div class="screen" id="s-settings">
+  <div class="nav">
+    <button class="nav-back" onclick="go('s-dash')">‹ 戻る</button>
+    <span class="nav-title">設定</span>
+  </div>
+  <div class="scroll">
+    <div class="sec">事業者情報</div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:14px">
+      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:0.5px solid var(--border);gap:10px">
+        <span style="font-size:13px;color:var(--text2);width:80px;flex-shrink:0">事業者名</span>
+        <input type="text" id="cfg-company" value="OFFICE NN" style="flex:1;border:none;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:var(--text)">
+      </div>
+      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:0.5px solid var(--border);gap:10px">
+        <span style="font-size:13px;color:var(--text2);width:80px;flex-shrink:0">担当者名</span>
+        <input type="text" id="cfg-name" value="日野間 佐登子" style="flex:1;border:none;font-size:13px;font-weight:600;font-family:inherit;background:transparent;color:var(--text)">
+      </div>
+      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:0.5px solid var(--border);gap:10px">
+        <span style="font-size:13px;color:var(--text2);width:80px;flex-shrink:0">住所</span>
+        <input type="text" id="cfg-addr" value="小樽市" style="flex:1;border:none;font-size:13px;font-family:inherit;background:transparent;color:var(--text)">
+      </div>
+      <div style="display:flex;align-items:center;padding:12px 14px;border-bottom:0.5px solid var(--border);gap:10px">
+        <span style="font-size:13px;color:var(--text2);width:80px;flex-shrink:0">振込先</span>
+        <input type="text" id="cfg-bank" value="○○銀行 旭川支店 普通 XXXXXXX" style="flex:1;border:none;font-size:12px;font-family:inherit;background:transparent;color:var(--text)">
+      </div>
+      <div style="display:flex;align-items:center;padding:12px 14px;gap:10px">
+        <span style="font-size:13px;color:var(--text2);width:80px;flex-shrink:0">消費税</span>
+        <span style="font-size:13px;font-weight:600">10%</span>
+      </div>
+    </div>
+    <div class="sec">アプリ情報</div>
+    <div style="border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden">
+      <div style="padding:11px 14px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:13px">
+        <span style="color:var(--text2)">バージョン</span><span style="font-weight:600">1.0.0</span>
+      </div>
+      <div style="padding:11px 14px;font-size:13px;display:flex;justify-content:space-between">
+        <span style="color:var(--text2)">開発</span><span style="font-weight:600">OFFICE NN</span>
+      </div>
+    </div>
+  </div>
+  <div class="bbar">
+    <button class="btn btn-blue" onclick="toast2('設定を保存しました')">💾 保存する</button>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const QUICK_FISH=[
+  {id:1,name:'クロマグロ',yomi:'くろまぐろ',cat:'魚類'},
+  {id:2,name:'サケ',yomi:'さけ',cat:'魚類'},
+  {id:3,name:'ヒラメ',yomi:'ひらめ',cat:'魚類'},
+  {id:4,name:'マダラ',yomi:'まだら',cat:'魚類'},
+  {id:5,name:'ホッケ',yomi:'ほっけ',cat:'魚類'},
+  {id:6,name:'黒がれい',yomi:'くろがれい',cat:'魚類'},
+  {id:7,name:'真がれい',yomi:'まがれい',cat:'魚類'},
+  {id:8,name:'ケガニ',yomi:'けがに',cat:'甲殻類'},
+  {id:9,name:'貝ほたて',yomi:'かいほたて',cat:'貝類'},
+  {id:10,name:'ウニ',yomi:'うに',cat:'魚卵'},
+  {id:11,name:'マダコ',yomi:'まだこ',cat:'軟体動物'},
+  {id:12,name:'いくら',yomi:'いくら',cat:'魚卵'},
+];
+const ALL_FISH=[
+  {id:13,name:'マグロ',yomi:'まぐろ',cat:'魚類'},
+  {id:14,name:'カツオ',yomi:'かつお',cat:'魚類'},
+  {id:15,name:'ブリ',yomi:'ぶり',cat:'魚類'},
+  {id:16,name:'サクラマス',yomi:'さくらます',cat:'魚類'},
+  {id:17,name:'マサバ',yomi:'まさば',cat:'魚類'},
+  {id:18,name:'マイワシ',yomi:'まいわし',cat:'魚類'},
+  {id:19,name:'サンマ',yomi:'さんま',cat:'魚類'},
+  {id:20,name:'ニシン',yomi:'にしん',cat:'魚類'},
+  {id:21,name:'宗八がれい',yomi:'そうはちがれい',cat:'魚類'},
+  {id:22,name:'アンコウ',yomi:'あんこう',cat:'魚類'},
+  {id:23,name:'キチジ',yomi:'きちじ',cat:'魚類'},
+  {id:24,name:'マダイ',yomi:'まだい',cat:'魚類'},
+  {id:25,name:'はっかく',yomi:'はっかく',cat:'魚類'},
+  {id:26,name:'南蛮えび',yomi:'なんばんえび',cat:'甲殻類'},
+  {id:27,name:'タラバガニ',yomi:'たらばがに',cat:'甲殻類'},
+  {id:28,name:'ズワイガニ',yomi:'ずわいがに',cat:'甲殻類'},
+  {id:29,name:'トヤマエビ',yomi:'とやまえび',cat:'甲殻類'},
+  {id:30,name:'ヤリイカ',yomi:'やりいか',cat:'軟体動物'},
+  {id:31,name:'スルメイカ',yomi:'するめいか',cat:'軟体動物'},
+  {id:32,name:'貝ほっき',yomi:'かいほっき',cat:'貝類'},
+  {id:33,name:'むきほたて',yomi:'むきほたて',cat:'貝類'},
+  {id:34,name:'ヤマトシジミ',yomi:'しじみ',cat:'貝類'},
+  {id:35,name:'アワビ',yomi:'あわび',cat:'貝類'},
+  {id:36,name:'冷ほたて',yomi:'れいほたて',cat:'加工品'},
+  {id:37,name:'冷トラウト',yomi:'れいとらうと',cat:'加工品'},
+];
+const CLIENTS=[
+  {id:1,name:'丸山水産',contact:'丸山 太郎',payterm:'月末締め翌月払い',items:[{name:'クロマグロ',qty:30,unit:'kg',unitPrice:6000,amount:180000},{name:'ヒラメ',qty:20,unit:'kg',unitPrice:2600,amount:52000}]},
+  {id:2,name:'北海鮮魚店',contact:'北川 花子',payterm:'15日締め月末払い',items:[{name:'マダラ',qty:60,unit:'kg',unitPrice:1260,amount:75600},{name:'ケガニ',qty:15,unit:'kg',unitPrice:8667,amount:130000}]},
+  {id:3,name:'旭川中央市場',contact:'田中 一郎',payterm:'都度払い',items:[{name:'貝ほたて',qty:100,unit:'kg',unitPrice:1680,amount:168000},{name:'ウニ',qty:8,unit:'kg',unitPrice:4375,amount:35000}]},
+  {id:4,name:'鈴木食品',contact:'鈴木 次郎',payterm:'月末締め翌々月払い',items:[{name:'クロマグロ',qty:50,unit:'kg',unitPrice:6200,amount:310000}]},
+];
+const MONTHS=['10月','11月','12月','1月','2月','3月','4月','5月'];
+const PUR=[142,168,195,158,172,188,210,218];
+const SELL_M=[188,221,258,209,227,248,277,289];
+const RANK_FISH=[{name:'クロマグロ',total:2840000,pct:100},{name:'貝ほたて',total:1920000,pct:68},{name:'ケガニ',total:1580000,pct:56},{name:'いくら',total:1240000,pct:44},{name:'タラバガニ',total:980000,pct:35},{name:'ウニ',total:760000,pct:27}];
+const HISTORY=[
+  {date:'2026年5月28日',items:['クロマグロ','ヒラメ','マダラ','ケガニ','貝ほたて','ウニ'],total:489490,count:6},
+  {date:'2026年5月27日',items:['サケ','ホッケ','黒がれい','真がれい','マダコ'],total:312600,count:5},
+  {date:'2026年5月26日',items:['クロマグロ','タラバガニ','いくら','貝ほたて'],total:628000,count:4},
+  {date:'2026年5月23日',items:['ヒラメ','マダラ','ニシン','ホッケ','南蛮えび'],total:284500,count:5},
+  {date:'2026年5月22日',items:['サケ','ウニ','いくら','マダコ'],total:415300,count:4},
+];
+
+// ===== STATE =====
+let items=[],sortData={},priceData={},issued={},paid={};
+let selFish=null,field='qty',qv='',pv='',unit='kg';
+let activeCat='魚類',curClient=null,payMethod='cash';
+let stageState={1:'current',2:'idle',3:'idle',4:'idle'};
+let fishQuick={};
+QUICK_FISH.concat(ALL_FISH).forEach(f=>fishQuick[f.id]=QUICK_FISH.some(q=>q.id===f.id));
+let priceSelId=null,pricePv='';
+
+// ===== UTILS =====
+function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
+function toast2(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800);}
+function fmtY(v){return'¥'+Math.round(v).toLocaleString();}
+function today(){const d=new Date();return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）';}
+function todayShort(){const d=new Date();return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';}
+function dueDate(){const d=new Date();d.setMonth(d.getMonth()+1);d.setDate(0);return d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日';}
+
+// ===== DASHBOARD =====
+function updateDash(){
+  document.getElementById('db-date').textContent=today();
+  document.getElementById('db-pur').textContent=items.length?fmtY(items.reduce((s,i)=>s+i.price,0)):'¥0';
+  const landSell=Object.values(priceData).reduce((s,v)=>s+v,0);
+  document.getElementById('db-sell').textContent=landSell?fmtY(landSell):'¥0';
+  const paidAmt=CLIENTS.filter(c=>paid[c.id]).reduce((s,c)=>s+clientGrand(c),0);
+  const totalAmt=CLIENTS.reduce((s,c)=>s+clientGrand(c),0);
+  document.getElementById('db-unpaid').textContent=fmtY(Math.max(0,totalAmt-paidAmt));
+  const dots=document.getElementById('db-dots');
+  dots.innerHTML=[1,2,3,4].map(n=>{
+    const s=stageState[n];
+    const bg=s==='done'?'var(--green)':s==='current'?'var(--blue)':'var(--border2)';
+    return`<div style="width:9px;height:9px;border-radius:50%;background:${bg}"></div>`;
+  }).join('');
+  [1,2,3,4].forEach(n=>{
+    const sc=document.getElementById('sc-'+n);
+    const sn=document.getElementById('sn-'+n);
+    const s=stageState[n];
+    sc.className='stage-card'+(s==='current'?' s-current':s==='done'?' s-done':'');
+    sn.className='snum'+(s==='current'?' sn-cur':s==='done'?' sn-done':' sn-idle');
+    sn.textContent=s==='done'?'✓':String(n);
+  });
+}
+
+// ===== STAGE 1 =====
+function initS1(){
+  document.getElementById('s1-date').textContent=todayShort();
+  document.getElementById('s1-count').textContent=items.length+'件登録済';
+  const cats=[...new Set(ALL_FISH.map(f=>f.cat))];
+  document.getElementById('cat-scroll').innerHTML=cats.map(c=>`<button class="cat-chip${c===activeCat?' on':''}" onclick="selCat('${c}')">${c}</button>`).join('');
+  document.getElementById('quick-grid').innerHTML=QUICK_FISH.map(f=>`<button class="fish-btn${selFish&&selFish.id===f.id?' sel':''}" onclick="selFish2(${f.id})">${f.name}<span class="yomi">${f.yomi}</span></button>`).join('');
+  renderAllGrid();
+}
+function selCat(c){activeCat=c;initS1();}
+function renderAllGrid(){
+  const list=ALL_FISH.filter(f=>f.cat===activeCat);
+  document.getElementById('all-grid').innerHTML=list.map(f=>`<button class="fish-btn${selFish&&selFish.id===f.id?' sel':''}" onclick="selFish2(${f.id})">${f.name}<span class="yomi">${f.yomi}</span></button>`).join('');
+}
+function selFish2(id){
+  selFish=QUICK_FISH.concat(ALL_FISH).find(f=>f.id===id);
+  qv='';pv='';field='qty';unit='kg';
+  document.getElementById('s1-fish-name').textContent=selFish.name;
+  document.getElementById('s1-input-title').textContent=selFish.name+' を入力';
+  setField('qty');renderUnits();updateAddBtn();
+  go('s-s1-input');
+}
+function setField(f){
+  field=f;
+  document.getElementById('ft-qty').classList.toggle('on',f==='qty');
+  document.getElementById('ft-price').classList.toggle('on',f==='price');
+  document.getElementById('ft-label').textContent=f==='qty'?'数量':'金額';
+  updateS1Disp();
+}
+function renderUnits(){
+  document.getElementById('unit-row').innerHTML=['kg','尾','箱','匹','杯','個'].map(u=>`<button class="uchip${u===unit?' on':''}" onclick="selUnit('${u}')">${u}</button>`).join('');
+}
+function selUnit(u){unit=u;renderUnits();updateS1Disp();}
+function np(n){
+  if(field==='qty'){if(qv.length>=7)return;qv+=n;}
+  else{if(pv.length>=9)return;pv+=n;}
+  updateS1Disp();updateAddBtn();
+}
+function npDel(){
+  if(field==='qty')qv=qv.slice(0,-1);else pv=pv.slice(0,-1);
+  updateS1Disp();updateAddBtn();
+}
+function updateS1Disp(){
+  const el=document.getElementById('s1-disp');
+  const mr=document.getElementById('margin-row');
+  if(field==='qty'){
+    el.textContent=qv?Number(qv).toLocaleString()+' '+unit:'入力してください';
+    el.className='disp-val'+(qv?'':' hint');
+    mr.innerHTML='';
+  } else {
+    el.textContent=pv?fmtY(Number(pv)):'入力してください';
+    el.className='disp-val'+(pv?'':' hint');
+    mr.innerHTML='';
+  }
+}
+function updateAddBtn(){document.getElementById('s1-add-btn').disabled=!(qv&&pv);}
+function addItem(){
+  items.push({id:Date.now(),fish:selFish,qty:Number(qv),unit,price:Number(pv)});
+  toast2(selFish.name+' を追加しました');
+  sortData[items[items.length-1].id]={dest:'none',landQty:0,storeQty:0};
+  document.getElementById('s1-count').textContent=items.length+'件登録済';
+  go('s-s1');initS1();
+}
+function renderS1List(){
+  const total=items.reduce((s,i)=>s+i.price,0);
+  document.getElementById('s1-sum-price').textContent=fmtY(total);
+  document.getElementById('s1-sum-sub').textContent=items.length+'種類';
+  if(!items.length){document.getElementById('s1-item-list').innerHTML='<div class="empty">まだ登録がありません</div>';return;}
+  document.getElementById('s1-item-list').innerHTML=items.map((it,i)=>`
+    <div class="pur-row">
+      <span style="font-size:11px;color:var(--text3);width:20px;text-align:center">${i+1}</span>
+      <span class="pur-name">${it.fish.name}</span>
+      <span class="pur-qty">${it.qty.toLocaleString()}${it.unit}</span>
+      <span class="pur-price">${fmtY(it.price)}</span>
+      <button class="pur-del" onclick="delItem(${it.id})">🗑</button>
+    </div>`).join('');
+}
+function delItem(id){items=items.filter(i=>i.id!==id);renderS1List();}
+function downloadCSV(){
+  if(!items.length){toast2('データがありません');return;}
+  const d=new Date();const ds=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();
+  const csv='\uFEFF'+'日付,No,魚種,読み,カテゴリ,数量,単位,仕入れ金額（円）\n'+items.map((it,i)=>[ds,i+1,it.fish.name,it.fish.yomi,it.fish.cat,it.qty,it.unit,it.price].join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='仕入れ_'+ds+'.csv';a.click();toast2('CSVをダウンロードしました');
+}
+function finishStage1(){
+  if(!items.length){toast2('仕入れデータがありません');return;}
+  stageState[1]='done';stageState[2]='current';
+  items.forEach(it=>{if(!sortData[it.id])sortData[it.id]={dest:'none',landQty:0,storeQty:0};});
+  updateDash();toast2('仕入れ入力 完了！');
+  renderSort();go('s-s2');
+}
+
+// ===== STAGE 2: 仕分け =====
+function renderSort(){
+  if(!items.length){document.getElementById('sort-list').innerHTML='<div class="empty">仕入れデータがありません<br>先に①仕入れ入力を完了してください</div>';return;}
+  document.getElementById('sort-list').innerHTML=items.map(it=>{
+    const sd=sortData[it.id]||{dest:'none'};
+    const isL=sd.dest==='land',isS=sd.dest==='store',isB=sd.dest==='both';
+    return`<div class="sort-item${isL?' land':isS||isB?' store':''}" id="si-${it.id}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:14px;font-weight:600">${it.fish.name}</span>
+        <span style="font-size:12px;color:var(--text2)">${fmtY(it.price)}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">${it.qty.toLocaleString()}${it.unit} 仕入れ</div>
+      <div class="sort-btns">
+        <button class="sbtn${isL?' land-on':''}" onclick="setDest(${it.id},'land')">🚚 全量陸送</button>
+        <button class="sbtn${isS?' store-on':''}" onclick="setDest(${it.id},'store')">🏭 全量倉庫</button>
+        <button class="sbtn${isB?' both-on':''}" onclick="setDest(${it.id},'both')">数量を分ける</button>
+      </div>
+      ${isB?`<div class="split-grid">
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px">🚚 陸送 (${it.unit})</div><input class="split-input" type="number" min="0" max="${it.qty}" value="${sd.landQty||''}" placeholder="0" oninput="setSplit(${it.id},'land',this.value)"></div>
+        <div><div style="font-size:11px;color:var(--text2);margin-bottom:3px">🏭 倉庫 (${it.unit})</div><input class="split-input" type="number" min="0" max="${it.qty}" value="${sd.storeQty||''}" placeholder="0" oninput="setSplit(${it.id},'store',this.value)"></div>
+      </div>`:''}
+    </div>`;
+  }).join('');
+}
+function setDest(id,dest){
+  const it=items.find(i=>i.id===id);
+  sortData[id]={dest,landQty:dest==='land'?it.qty:0,storeQty:dest==='store'?it.qty:0};
+  renderSort();renderPriceList();
+}
+function setSplit(id,type,val){
+  const it=items.find(i=>i.id===id);const v=Math.min(Number(val)||0,it.qty);
+  if(type==='land'){sortData[id].landQty=v;sortData[id].storeQty=Math.max(0,it.qty-v);}
+  else{sortData[id].storeQty=v;sortData[id].landQty=Math.max(0,it.qty-v);}
+}
+function getLandItems(){
+  return items.filter(it=>{const sd=sortData[it.id];return sd&&(sd.dest==='land'||(sd.dest==='both'&&sd.landQty>0));})
+    .map(it=>{const sd=sortData[it.id];const qty=sd.dest==='land'?it.qty:sd.landQty;const ratio=it.qty>0?qty/it.qty:1;return{...it,landQty:qty,landCost:Math.round(it.price*ratio)};});
+}
+
+// ===== STAGE 2: 値付け =====
+function renderPriceList(){
+  const land=getLandItems();
+  if(!land.length){document.getElementById('price-list').innerHTML='<div class="empty">陸送に振り分けた魚種がありません</div>';return;}
+  const done=land.filter(i=>priceData[i.id]).length;
+  document.getElementById('price-progress').style.width=Math.round(done/land.length*100)+'%';
+  document.getElementById('price-list').innerHTML=land.map(it=>{
+    const hasp=!!priceData[it.id];const isSel=it.id===priceSelId;
+    const m=hasp?Math.round((priceData[it.id]-it.landCost)/it.landCost*100):null;
+    return`<div class="price-card${isSel?'" style="border-color:var(--blue);border-width:1.5px':''}" onclick="selPriceItem(${it.id})">
+      <div class="pc-head">
+        <span style="font-size:13px;font-weight:600;color:var(--blue-text)">${it.fish.name}</span>
+        <span style="font-size:12px;color:var(--blue)">${it.landQty}${it.unit}</span>
+      </div>
+      <div class="pc-body">
+        <div class="pc-row"><span class="pc-label">仕入原価</span><span style="font-size:14px;font-weight:600">${fmtY(it.landCost)}</span></div>
+        ${hasp?`<div class="pc-row"><span class="pc-label" style="color:var(--blue)">販売金額</span><span style="font-size:14px;font-weight:600;color:var(--blue)">${fmtY(priceData[it.id])}</span></div>
+        <div style="text-align:right"><span class="margin-chip ${m>=0?'mg-pos':'mg-neg'}">粗利 ${m>=0?'+':''}${m}%</span></div>`
+        :`<div style="font-size:12px;color:var(--text3)">タップして値付け</div>`}
+      </div>
+    </div>`;
+  }).join('');
+}
+function selPriceItem(id){
+  priceSelId=id;pricePv=priceData[id]?String(priceData[id]):'';
+  const it=getLandItems().find(i=>i.id===id);
+  if(!it)return;
+  document.getElementById('price-fish-name').textContent=it.fish.name;
+  document.getElementById('price-cost-info').textContent='仕入原価 '+fmtY(it.landCost)+' （'+it.landQty+it.unit+' / 単価 '+fmtY(Math.round(it.landCost/it.landQty))+'/'+it.unit+'）';
+  updatePriceDisp();renderPriceList();
+}
+function pnp(n){if(!priceSelId)return;if(pricePv.length>=9)return;pricePv+=n;updatePriceDisp();}
+function pnpDel(){if(!priceSelId)return;pricePv=pricePv.slice(0,-1);updatePriceDisp();}
+function updatePriceDisp(){
+  const el=document.getElementById('price-disp');const mr=document.getElementById('price-margin');
+  if(!pricePv){el.textContent='入力してください';el.className='disp-val hint';mr.innerHTML='';return;}
+  el.textContent=fmtY(Number(pricePv));el.className='disp-val';
+  if(priceSelId){const it=getLandItems().find(i=>i.id===priceSelId);if(it){const m=Math.round((Number(pricePv)-it.landCost)/it.landCost*100);mr.innerHTML=`<span class="margin-chip ${m>=0?'mg-pos':'mg-neg'}">粗利 ${m>=0?'+':''}${m}%</span>`;}}
+}
+function confirmPrice(){
+  if(!priceSelId||!pricePv){toast2('金額を入力してください');return;}
+  priceData[priceSelId]=Number(pricePv);
+  toast2(getLandItems().find(i=>i.id===priceSelId)?.fish.name+' '+fmtY(Number(pricePv))+' 確定');
+  const land=getLandItems();const idx=land.findIndex(i=>i.id===priceSelId);
+  if(idx<land.length-1){selPriceItem(land[idx+1].id);}else{priceSelId=null;pricePv='';document.getElementById('price-disp').textContent='全て完了';document.getElementById('price-disp').className='disp-val';document.getElementById('price-margin').innerHTML='';}
+  renderPriceList();
+}
+function renderSheet(){
+  const land=getLandItems();
+  const store=items.filter(it=>{const sd=sortData[it.id];return sd&&(sd.dest==='store'||(sd.dest==='both'&&sd.storeQty>0));}).map(it=>{const sd=sortData[it.id];const qty=sd.dest==='store'?it.qty:sd.storeQty;const ratio=it.qty>0?qty/it.qty:1;return{...it,storeQty:qty,storeCost:Math.round(it.price*ratio)};});
+  const totalCost=items.reduce((s,i)=>s+i.price,0);
+  const landSell=land.reduce((s,i)=>s+(priceData[i.id]||0),0);
+  const landCost=land.reduce((s,i)=>s+i.landCost,0);
+  const storeCost=store.reduce((s,i)=>s+i.storeCost,0);
+  document.getElementById('sheet-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">仕入れ合計</div><div class="metric-val">${fmtY(totalCost)}</div></div>
+    <div class="metric"><div class="metric-label">陸送 販売金額</div><div class="metric-val" style="color:var(--blue)">${landSell?fmtY(landSell):'未入力'}</div></div>
+    <div class="metric"><div class="metric-label">陸送 原価</div><div class="metric-val">${fmtY(landCost)}</div></div>
+    <div class="metric"><div class="metric-label">倉庫 原価</div><div class="metric-val" style="color:var(--amber)">${fmtY(storeCost)}</div></div>`;
+  const tbl=(rows,showSell)=>`<div style="border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:4px">
+    <div style="display:grid;grid-template-columns:1fr 50px 70px${showSell?' 70px':''};padding:6px 10px;background:var(--bg2);border-bottom:0.5px solid var(--border);font-size:11px;color:var(--text3)">
+      <span>魚種</span><span style="text-align:right">数量</span><span style="text-align:right">原価</span>${showSell?'<span style="text-align:right;color:var(--blue)">販売</span>':''}
+    </div>
+    <div style="padding:0 10px">${rows.map(it=>`<div style="display:grid;grid-template-columns:1fr 50px 70px${showSell?' 70px':''};padding:8px 0;border-bottom:0.5px solid var(--border);font-size:12px;align-items:center">
+      <span style="font-weight:600">${it.fish.name}</span>
+      <span style="text-align:right;color:var(--text2)">${(showSell?it.landQty:it.storeQty)}${it.unit}</span>
+      <span style="text-align:right;color:var(--text2)">${fmtY(showSell?it.landCost:it.storeCost)}</span>
+      ${showSell?`<span style="text-align:right;font-weight:600;color:${priceData[it.id]?'var(--blue)':'var(--text3)'}">${priceData[it.id]?fmtY(priceData[it.id]):'—'}</span>`:''}
+    </div>`).join('')}</div></div>`;
+  document.getElementById('sheet-land').innerHTML=land.length?tbl(land,true):'<div class="empty" style="padding:12px">陸送なし</div>';
+  if(store.length){document.getElementById('sheet-store-label').style.display='';document.getElementById('sheet-store').innerHTML=tbl(store,false);}
+  else{document.getElementById('sheet-store-label').style.display='none';document.getElementById('sheet-store').innerHTML='';}
+}
+function finishStage2(){
+  stageState[2]='done';stageState[3]='current';
+  updateDash();toast2('値付け完了！書類発行へ進みます');
+  renderClientsScreen();go('s-s3-clients');
+}
+
+// ===== STAGE 3 =====
+function clientSubtotal(c){return c.items.reduce((s,i)=>s+i.amount,0);}
+function clientTax(c){return Math.round(clientSubtotal(c)*0.1);}
+function clientGrand(c){return clientSubtotal(c)+clientTax(c);}
+function renderClientsScreen(){
+  const total=CLIENTS.reduce((s,c)=>s+clientGrand(c),0);
+  const paidAmt=CLIENTS.filter(c=>paid[c.id]).reduce((s,c)=>s+clientGrand(c),0);
+  document.getElementById('c-total').textContent=fmtY(total);
+  document.getElementById('c-paid').textContent=fmtY(paidAmt);
+  document.getElementById('c-unpaid').textContent=fmtY(total-paidAmt);
+  document.getElementById('c-count').textContent=CLIENTS.length+'社';
+  document.getElementById('clients-list').innerHTML=CLIENTS.map(c=>{
+    const st=paid[c.id]?'paid':issued[c.id]?'issued':'pending';
+    const stLabel={pending:'未発行',issued:'発行済',paid:'入金済'}[st];
+    const stClass={pending:'sc-pending',issued:'sc-issued',paid:'sc-paid'}[st];
+    return`<div class="client-card" onclick="openClient(${c.id})">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:14px;font-weight:600">${c.name}</span>
+        <span class="status-chip ${stClass}">${stLabel}</span>
+      </div>
+      <div style="font-size:12px;color:var(--text2)">${c.contact}・${c.items.length}品目・${fmtY(clientGrand(c))}（税込）</div>
+    </div>`;
+  }).join('');
+}
+function openClient(id){
+  curClient=CLIENTS.find(c=>c.id===id);
+  const d=todayShort();
+  document.getElementById('doc-screen-title').textContent=curClient.name;
+  document.getElementById('d-date').textContent=d;
+  document.getElementById('d-to').textContent=curClient.name+' 御中';
+  document.getElementById('d-contact').textContent='担当：'+curClient.contact+' 様';
+  const rows=curClient.items.map(it=>`<tr><td>${it.name}</td><td style="text-align:right">${it.qty}${it.unit}</td><td style="text-align:right">${fmtY(it.unitPrice)}</td><td style="text-align:right">${fmtY(it.amount)}</td></tr>`).join('');
+  document.getElementById('d-items').innerHTML=rows;
+  document.getElementById('d-totals').innerHTML=buildTotals(curClient,'合計金額');
+  go('s-s3-delivery');
+}
+function buildTotals(c,label){
+  const sub=clientSubtotal(c),tax=clientTax(c),grand=clientGrand(c);
+  return`<div class="tot-row"><span style="color:var(--text2)">小計</span><span>${fmtY(sub)}</span></div>
+  <div class="tot-row"><span style="color:var(--text2)">消費税（10%）</span><span>${fmtY(tax)}</span></div>
+  <div class="tot-row tot-grand"><span>${label}</span><span style="color:var(--blue)">${fmtY(grand)}</span></div>`;
+}
+function goInvoice(){
+  issued[curClient.id]=true;
+  const d=todayShort();
+  document.getElementById('i-date').textContent=d;
+  document.getElementById('i-due').textContent=dueDate();
+  document.getElementById('i-to').textContent=curClient.name+' 御中';
+  document.getElementById('i-contact').textContent='担当：'+curClient.contact+' 様　／　'+curClient.payterm;
+  document.getElementById('i-items').innerHTML=curClient.items.map(it=>`<tr><td>${it.name}</td><td style="text-align:right">${it.qty}${it.unit}</td><td style="text-align:right">${fmtY(it.unitPrice)}</td><td style="text-align:right">${fmtY(it.amount)}</td></tr>`).join('');
+  document.getElementById('i-totals').innerHTML=buildTotals(curClient,'ご請求金額');
+  go('s-s3-invoice');
+}
+function goReceipt(){
+  const d=todayShort();
+  document.getElementById('r-date').textContent=d;
+  document.getElementById('r-to').textContent=curClient.name+' 様';
+  document.getElementById('r-amount').textContent='¥ '+clientGrand(curClient).toLocaleString();
+  document.getElementById('r-tax').textContent=fmtY(clientTax(curClient));
+  payMethod='cash';
+  document.getElementById('pc-cash').classList.add('on');
+  document.getElementById('pc-transfer').classList.remove('on');
+  document.getElementById('pc-card').classList.remove('on');
+  updateReceipt();
+  go('s-s3-receipt');
+}
+function setPayMethod(m){
+  payMethod=m;
+  ['cash','transfer','card'].forEach(k=>document.getElementById('pc-'+k).classList.toggle('on',k===m));
+  updateReceipt();
+}
+function setTadashi(v){document.getElementById('tadashi').value=v;updateReceipt();}
+function updateReceipt(){
+  const t=document.getElementById('tadashi').value||'鮮魚販売代金として';
+  document.getElementById('r-tadashi').textContent='但し、'+t;
+  const labels={cash:'💴 現金',transfer:'🏦 銀行振込',card:'💳 カード払い'};
+  const bgs={cash:'var(--green-bg)',transfer:'var(--blue-bg)',card:'var(--purple-bg)'};
+  const colors={cash:'var(--green-text)',transfer:'var(--blue-text)',card:'var(--purple-text)'};
+  document.getElementById('r-pay-badge').innerHTML=`<span style="display:inline-block;padding:3px 9px;border-radius:4px;font-size:11px;font-weight:600;background:${bgs[payMethod]};color:${colors[payMethod]}">${labels[payMethod]}</span>`;
+}
+function issueComplete(){
+  if(curClient)issued[curClient.id]=true;
+  toast2('書類発行が完了しました');
+  renderClientsScreen();go('s-s3-clients');
+}
+function renderPaymentScreen(){
+  const total=CLIENTS.reduce((s,c)=>s+clientGrand(c),0);
+  const paidAmt=CLIENTS.filter(c=>paid[c.id]).reduce((s,c)=>s+clientGrand(c),0);
+  document.getElementById('pay-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">請求合計</div><div class="metric-val" style="color:var(--blue)">${fmtY(total)}</div></div>
+    <div class="metric"><div class="metric-label">入金済</div><div class="metric-val" style="color:var(--green)">${fmtY(paidAmt)}</div></div>
+    <div class="metric"><div class="metric-label">未入金</div><div class="metric-val" style="color:var(--amber)">${fmtY(total-paidAmt)}</div></div>
+    <div class="metric"><div class="metric-label">入金済件数</div><div class="metric-val">${Object.keys(paid).length}/${CLIENTS.length}社</div></div>`;
+  document.getElementById('payment-list').innerHTML=CLIENTS.map(c=>{
+    const isPaid=!!paid[c.id];
+    return`<div class="pay-row${isPaid?' paid':''}">
+      <div style="flex:1"><div style="font-size:14px;font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${c.contact}${isPaid?' · 入金済':''}</div></div>
+      <span style="font-size:14px;font-weight:600;color:var(--blue);margin-right:8px">${fmtY(clientGrand(c))}</span>
+      <button class="pay-check${isPaid?' on':''}" onclick="togglePay(${c.id})">${isPaid?'✓':''}</button>
+    </div>`;
+  }).join('');
+  if(CLIENTS.every(c=>paid[c.id])){stageState[3]='done';stageState[4]='current';updateDash();toast2('全社の入金確認完了！お疲れさまでした 🎉');}
+}
+function togglePay(id){
+  if(paid[id])delete paid[id];else paid[id]=true;
+  renderPaymentScreen();renderClientsScreen();
+  const paidAmt=CLIENTS.filter(c=>paid[c.id]).reduce((s,c)=>s+clientGrand(c),0);
+  const totalAmt=CLIENTS.reduce((s,c)=>s+clientGrand(c),0);
+  document.getElementById('db-unpaid').textContent=fmtY(Math.max(0,totalAmt-paidAmt));
+}
+
+// ===== STAGE 4 =====
+function renderMonthly(){
+  const max=Math.max(...SELL_M);
+  document.getElementById('bar-chart').innerHTML=MONTHS.map((m,i)=>`
+    <div class="bar-row">
+      <span style="font-size:12px;color:var(--text2);width:32px;text-align:right;flex-shrink:0">${m}</span>
+      <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(PUR[i]/max*100)}%;background:#B5D4F4"></div></div>
+        <div class="bar-track"><div class="bar-fill" style="width:${Math.round(SELL_M[i]/max*100)}%;background:var(--blue)"></div></div>
+      </div>
+      <span style="font-size:11px;color:var(--text2);min-width:40px;text-align:right">${SELL_M[i]}万</span>
+    </div>`).join('');
+  document.getElementById('rank-list').innerHTML=RANK_FISH.map((r,i)=>`
+    <div class="rank-item">
+      <span style="width:20px;font-size:13px;font-weight:600;color:${i===0?'var(--amber)':'var(--text3)'};text-align:center;flex-shrink:0">${i+1}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${r.name}</div>
+        <div style="height:4px;background:var(--bg2);border-radius:2px;margin-top:4px;overflow:hidden"><div style="height:100%;background:var(--blue);width:${r.pct}%;border-radius:2px"></div></div>
+      </div>
+      <span style="font-size:13px;font-weight:600;color:var(--blue)">${fmtY(r.total/10000)}万</span>
+    </div>`).join('');
+}
+function switchMTab(t){
+  document.getElementById('mt1').classList.toggle('on',t==='bar');
+  document.getElementById('mt2').classList.toggle('on',t==='rank');
+  document.getElementById('m-bar-view').style.display=t==='bar'?'':'none';
+  document.getElementById('m-rank-view').style.display=t==='rank'?'':'none';
+}
+const M4_CLIENTS=[
+  {id:1,name:'丸山水産',contact:'丸山 太郎',payterm:'月末締め翌月払い',total:1840000,count:18,last:'2026年5月28日'},
+  {id:2,name:'北海鮮魚店',contact:'北川 花子',payterm:'15日締め月末払い',total:2560000,count:24,last:'2026年5月27日'},
+  {id:3,name:'旭川中央市場',contact:'田中 一郎',payterm:'都度払い',total:3120000,count:31,last:'2026年5月28日'},
+  {id:4,name:'鈴木食品',contact:'鈴木 次郎',payterm:'月末締め翌々月払い',total:980000,count:9,last:'2026年5月20日'},
+];
+function renderM4Clients(q=''){
+  const list=q?M4_CLIENTS.filter(c=>c.name.includes(q)||c.contact.includes(q)):M4_CLIENTS;
+  document.getElementById('m4-clients-list').innerHTML=list.map(c=>`
+    <div class="card" style="cursor:pointer" onclick="toast2('${c.name} の詳細（実装予定）')">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--blue-bg);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:var(--blue-text);flex-shrink:0">${c.name.slice(0,2)}</div>
+        <div><div style="font-size:14px;font-weight:600">${c.name}</div><div style="font-size:11px;color:var(--text2)">${c.contact}・${c.payterm}</div></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span style="background:var(--bg2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)">累計 ${fmtY(c.total/10000)}万</span>
+        <span style="background:var(--bg2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)">${c.count}回取引</span>
+        <span style="background:var(--bg2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)">最終 ${c.last}</span>
+      </div>
+    </div>`).join('');
+}
+function filterM4Clients(q){renderM4Clients(q);}
+function renderHistoryList(q=''){
+  const list=q?HISTORY.filter(h=>h.date.includes(q)||h.items.some(i=>i.includes(q))):HISTORY;
+  document.getElementById('history-list').innerHTML=list.length?list.map(h=>`
+    <div class="card" style="cursor:pointer;padding:12px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:5px">📅 ${h.date}</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">${h.items.map(i=>`<span style="background:var(--bg2);border-radius:4px;padding:2px 7px;font-size:11px;color:var(--text2)">${i}</span>`).join('')}</div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:12px;color:var(--text2)">${h.count}種類</span>
+        <span style="font-size:14px;font-weight:600;color:var(--blue)">${fmtY(h.total)}</span>
+      </div>
+    </div>`).join(''):'<div class="empty">該当なし</div>';
+}
+function filterHistory(q){renderHistoryList(q);}
+function renderFishmaster(){
+  const allFish=QUICK_FISH.concat(ALL_FISH);
+  const onCount=allFish.filter(f=>fishQuick[f.id]).length;
+  document.getElementById('quick-count').textContent=onCount+'/12種';
+  document.getElementById('quick-count').style.color=onCount>12?'var(--red)':'var(--green)';
+  document.getElementById('fishmaster-list').innerHTML=allFish.map(f=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:0.5px solid var(--border);border-radius:var(--radius);margin-bottom:7px">
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:600">${f.name}</div>
+        <div style="font-size:11px;color:var(--text2)">${f.cat}</div>
+      </div>
+      <span style="font-size:11px;color:var(--text3)">${fishQuick[f.id]?'ON':'OFF'}</span>
+      <button class="toggle ${fishQuick[f.id]?'on':'off'}" onclick="toggleFish(${f.id})" aria-label="${f.name}"></button>
+    </div>`).join('');
+}
+function toggleFish(id){
+  const on=fishQuick[id];
+  const onCount=QUICK_FISH.concat(ALL_FISH).filter(f=>fishQuick[f.id]).length;
+  if(!on&&onCount>=12){toast2('クイック表示は12種まで。他をOFFにしてください');return;}
+  fishQuick[id]=!on;renderFishmaster();
+}
+
+// ===== SPLASH =====
+(function(){
+  let p=0;
+  const bar=document.getElementById('splash-bar');
+  const iv=setInterval(()=>{
+    p+=2;bar.style.width=p+'%';
+    if(p>=100){clearInterval(iv);document.getElementById('s-splash').classList.remove('on');document.getElementById('s-dash').classList.add('on');updateDash();}
+  },30);
+})();
+
+// ===== INIT =====
+document.getElementById('db-date').textContent=today();
+updateDash();
+renderMonthly();
+renderM4Clients();
+renderHistoryList();
+renderFishmaster();
+
+document.querySelectorAll('#s-s2,#s-s2-price,#s-s2-sheet').forEach(s=>{
+  const orig=s.style.display;
+  const obs=new MutationObserver(()=>{
+    if(s.classList.contains('on')){
+      if(s.id==='s-s2')renderSort();
+      if(s.id==='s-s2-price')renderPriceList();
+      if(s.id==='s-s2-sheet')renderSheet();
+    }
+  });
+  obs.observe(s,{attributeFilter:['class']});
+});
+document.getElementById('s-s1').addEventListener('click',function(e){if(e.target===this){}});
+document.querySelectorAll('#s-s1,#s-s1-list').forEach(s=>{
+  new MutationObserver(()=>{if(s.classList.contains('on')){if(s.id==='s-s1')initS1();if(s.id==='s-s1-list')renderS1List();}}).observe(s,{attributeFilter:['class']});
+});
+document.querySelectorAll('#s-s3-clients,#s-s3-payment').forEach(s=>{
+  new MutationObserver(()=>{if(s.classList.contains('on')){if(s.id==='s-s3-clients')renderClientsScreen();if(s.id==='s-s3-payment')renderPaymentScreen();}}).observe(s,{attributeFilter:['class']});
+});
+</script>
+</body>
+</html>
